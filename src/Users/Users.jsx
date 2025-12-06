@@ -88,7 +88,7 @@ const deleteUser = async (userId) => {
   return (
     <div className="users-page">
       <div className="container">
-        <h1>All User</h1>
+        {/* <h1>All User</h1> */}
         <h3>Users page</h3>
 
         <div className="users-list">
