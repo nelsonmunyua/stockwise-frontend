@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import axios from 'axios';
-import { Dialog } from 'primereact/dialog';
-import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import axios from "axios";
+import { Dialog } from "primereact/dialog";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
+
+const apiUrl = import.meta.env.VITE_API_URL; // <--- use this everywhere
 
 function Categories() {
   const [categories, setCategories] = useState([]);
@@ -21,7 +23,7 @@ function Categories() {
 
   const getAllCategories = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/categories");
+      const response = await axios.get(`${apiUrl}/categories`);
       setCategories(response.data);
     } catch (e) {
       console.error("Failed to fetch categories:", e);
@@ -32,12 +34,12 @@ function Categories() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const addCategory = async () => {
     try {
-      await axios.post("http://localhost:8000/categories", formData);
+      await axios.post(`${apiUrl}/categories`, formData);
       getAllCategories();
       setShowAddMode(false);
       setFormData({ name: "", description: "" });
@@ -48,7 +50,7 @@ function Categories() {
 
   const editCategory = async () => {
     try {
-      await axios.put(`http://localhost:8000/categories/${selectedCategory.id}`, formData);
+      await axios.put(`${apiUrl}/categories/${selectedCategory.id}`, formData);
       getAllCategories();
       setShowEditMode(false);
       setSelectedCategory(null);
@@ -61,15 +63,15 @@ function Categories() {
   const deleteCategoryConfirm = (category) => {
     confirmDialog({
       message: `Are you sure you want to delete "${category.name}"?`,
-      header: 'Delete Confirmation',
-      icon: 'pi pi-exclamation-triangle',
+      header: "Delete Confirmation",
+      icon: "pi pi-exclamation-triangle",
       accept: () => deleteCategory(category.id),
     });
   };
 
   const deleteCategory = async (categoryId) => {
     try {
-      await axios.delete(`http://localhost:8000/categories/${categoryId}`);
+      await axios.delete(`${apiUrl}/categories/${categoryId}`);
       getAllCategories();
     } catch (e) {
       console.error("Failed to delete category:", e);
@@ -80,8 +82,8 @@ function Categories() {
   const actionsTemplate = (rowData) => {
     return (
       <>
-        <button 
-          className="btn btn-primary btn-sm me-2" 
+        <button
+          className="btn btn-primary btn-sm me-2"
           onClick={() => {
             setSelectedCategory(rowData);
             setFormData({ name: rowData.name, description: rowData.description || "" });
@@ -90,10 +92,7 @@ function Categories() {
         >
           <i className="pi pi-pencil"></i> Edit
         </button>
-        <button 
-          className="btn btn-danger btn-sm" 
-          onClick={() => deleteCategoryConfirm(rowData)}
-        >
+        <button className="btn btn-danger btn-sm" onClick={() => deleteCategoryConfirm(rowData)}>
           <i className="pi pi-trash"></i> Delete
         </button>
       </>
@@ -105,8 +104,8 @@ function Categories() {
       <div className="card">
         <div className="card-header d-flex justify-content-between align-items-center">
           <h2>Categories</h2>
-          <button 
-            className="btn btn-success" 
+          <button
+            className="btn btn-success"
             onClick={() => {
               setFormData({ name: "", description: "" });
               setShowAddMode(true);
@@ -116,13 +115,7 @@ function Categories() {
           </button>
         </div>
         <div className="card-body">
-          <DataTable 
-            value={categories} 
-            paginator 
-            rows={10}
-            loading={loading}
-            emptyMessage="No categories found."
-          >
+          <DataTable value={categories} paginator rows={10} loading={loading} emptyMessage="No categories found.">
             <Column field="id" header="ID" sortable></Column>
             <Column field="name" header="Name" sortable></Column>
             <Column field="description" header="Description"></Column>
@@ -132,10 +125,10 @@ function Categories() {
       </div>
 
       {/* Add Category Dialog */}
-      <Dialog 
-        header="Add Category" 
-        visible={showAddMode} 
-        style={{ width: "50vw" }} 
+      <Dialog
+        header="Add Category"
+        visible={showAddMode}
+        style={{ width: "50vw" }}
         onHide={() => setShowAddMode(false)}
         footer={
           <div>
@@ -176,10 +169,10 @@ function Categories() {
       </Dialog>
 
       {/* Edit Category Dialog */}
-      <Dialog 
-        header="Edit Category" 
-        visible={showEditMode} 
-        style={{ width: "50vw" }} 
+      <Dialog
+        header="Edit Category"
+        visible={showEditMode}
+        style={{ width: "50vw" }}
         onHide={() => setShowEditMode(false)}
         footer={
           <div>

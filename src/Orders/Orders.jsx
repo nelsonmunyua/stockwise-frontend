@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import axios from 'axios';
-import { Dialog } from 'primereact/dialog';
-import { TabView, TabPanel } from 'primereact/tabview';
+import axios from "axios";
+import { Dialog } from "primereact/dialog";
+import { TabView, TabPanel } from "primereact/tabview";
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
+
+const apiUrl = import.meta.env.VITE_API_URL; // <--- use this for API calls
 
 function Orders() {
   const [orders, setOrders] = useState([]);
@@ -15,10 +17,7 @@ function Orders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
-  const [newOrder, setNewOrder] = useState({
-    user_id: "",
-    items: []
-  });
+  const [newOrder, setNewOrder] = useState({ user_id: "", items: [] });
   const [availableProducts, setAvailableProducts] = useState([]);
 
   useEffect(() => {
@@ -36,7 +35,7 @@ function Orders() {
 
   const getAllOrders = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/orders");
+      const response = await axios.get(`${apiUrl}/orders`);
       setOrders(response.data);
     } catch (e) {
       console.error("Failed to fetch orders:", e);
@@ -47,7 +46,7 @@ function Orders() {
 
   const getAllProducts = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/products");
+      const response = await axios.get(`${apiUrl}/products`);
       setProducts(response.data);
     } catch (e) {
       console.error("Failed to fetch products:", e);
@@ -56,7 +55,7 @@ function Orders() {
 
   const getAllUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/users");
+      const response = await axios.get(`${apiUrl}/users`);
       setUsers(response.data.filter(user => user.is_active));
     } catch (e) {
       console.error("Failed to fetch users:", e);
@@ -65,7 +64,7 @@ function Orders() {
 
   const getOrderDetails = async (orderId) => {
     try {
-      const response = await axios.get(`http://localhost:8000/orders/${orderId}`);
+      const response = await axios.get(`${apiUrl}/orders/${orderId}`);
       setSelectedOrder(response.data);
       setShowOrderDetails(true);
     } catch (e) {
@@ -74,23 +73,17 @@ function Orders() {
   };
 
   const handleAddItem = () => {
-    setNewOrder(prev => ({
-      ...prev,
-      items: [...prev.items, { product_id: "", quantity: 1 }]
-    }));
+    setNewOrder(prev => ({ ...prev, items: [...prev.items, { product_id: "", quantity: 1 }] }));
   };
 
   const handleRemoveItem = (index) => {
-    setNewOrder(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index)
-    }));
+    setNewOrder(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
   };
 
   const handleItemChange = (index, field, value) => {
     setNewOrder(prev => ({
       ...prev,
-      items: prev.items.map((item, i) => 
+      items: prev.items.map((item, i) =>
         i === index ? { ...item, [field]: field === 'quantity' ? parseInt(value) || 0 : value } : item
       )
     }));
@@ -99,69 +92,40 @@ function Orders() {
   const calculateTotal = () => {
     return newOrder.items.reduce((total, item) => {
       const product = products.find(p => p.id === parseInt(item.product_id));
-      if (product) {
-        return total + (product.price * item.quantity);
-      }
+      if (product) return total + product.price * item.quantity;
       return total;
     }, 0);
   };
 
   const createOrder = async () => {
     try {
-      // Validate
-      if (!newOrder.user_id) {
-        alert("Please select a user");
-        return;
-      }
+      if (!newOrder.user_id) return alert("Please select a user");
+      if (newOrder.items.length === 0) return alert("Please add at least one item to the order");
 
-      if (newOrder.items.length === 0) {
-        alert("Please add at least one item to the order");
-        return;
-      }
-
-      // Filter out items with no product selected
       const validItems = newOrder.items.filter(item => item.product_id && item.quantity > 0);
-      
-      if (validItems.length === 0) {
-        alert("Please add valid items to the order");
-        return;
-      }
+      if (validItems.length === 0) return alert("Please add valid items to the order");
 
-      const orderData = {
-        user_id: parseInt(newOrder.user_id),
-        items: validItems
-      };
+      const orderData = { user_id: parseInt(newOrder.user_id), items: validItems };
 
-      const response = await axios.post("http://localhost:8000/orders", orderData);
+      await axios.post(`${apiUrl}/orders`, orderData);
       alert("Order created successfully!");
       setShowCreateMode(false);
       setNewOrder({ user_id: "", items: [] });
       getAllOrders();
-      getAllProducts(); // Refresh product stock
+      getAllProducts();
     } catch (e) {
       console.error("Failed to create order:", e);
       alert(e.response?.data?.detail || "Failed to create order");
     }
   };
 
-  const dateTemplate = (rowData) => {
-    return new Date(rowData.created_at).toLocaleString();
-  };
-
-  const amountTemplate = (rowData) => {
-    return `$${rowData.total_amount.toFixed(2)}`;
-  };
-
-  const actionsTemplate = (rowData) => {
-    return (
-      <button 
-        className="btn btn-info btn-sm" 
-        onClick={() => getOrderDetails(rowData.id)}
-      >
-        <i className="pi pi-eye me-1"></i>View Details
-      </button>
-    );
-  };
+  const dateTemplate = (rowData) => new Date(rowData.created_at).toLocaleString();
+  const amountTemplate = (rowData) => `$${rowData.total_amount.toFixed(2)}`;
+  const actionsTemplate = (rowData) => (
+    <button className="btn btn-info btn-sm" onClick={() => getOrderDetails(rowData.id)}>
+      <i className="pi pi-eye me-1"></i>View Details
+    </button>
+  );
 
   return (
     <div className="container mt-4">
@@ -170,21 +134,12 @@ function Orders() {
           <div className="card">
             <div className="card-header d-flex justify-content-between align-items-center">
               <h2>Orders</h2>
-              <button 
-                className="btn btn-success" 
-                onClick={() => setShowCreateMode(true)}
-              >
+              <button className="btn btn-success" onClick={() => setShowCreateMode(true)}>
                 <i className="pi pi-plus me-2"></i>Create New Order
               </button>
             </div>
             <div className="card-body">
-              <DataTable 
-                value={orders} 
-                paginator 
-                rows={10}
-                loading={loading}
-                emptyMessage="No orders found."
-              >
+              <DataTable value={orders} paginator rows={10} loading={loading} emptyMessage="No orders found.">
                 <Column field="id" header="Order ID" sortable></Column>
                 <Column field="created_at" header="Date" body={dateTemplate} sortable></Column>
                 <Column field="total_amount" header="Total Amount" body={amountTemplate} sortable></Column>
@@ -197,25 +152,18 @@ function Orders() {
       </TabView>
 
       {/* Create Order Dialog */}
-      <Dialog 
-        header="Create New Order" 
-        visible={showCreateMode} 
-        style={{ width: "70vw", maxHeight: "80vh" }} 
-        onHide={() => {
-          setShowCreateMode(false);
-          setNewOrder({ user_id: "", items: [] });
-        }}
+      <Dialog
+        header="Create New Order"
+        visible={showCreateMode}
+        style={{ width: "70vw", maxHeight: "80vh" }}
+        onHide={() => setShowCreateMode(false)}
         footer={
           <div>
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h4>Total: ${calculateTotal().toFixed(2)}</h4>
               <div>
-                <button className="btn btn-secondary me-2" onClick={() => setShowCreateMode(false)}>
-                  Cancel
-                </button>
-                <button className="btn btn-success" onClick={createOrder}>
-                  Create Order
-                </button>
+                <button className="btn btn-secondary me-2" onClick={() => setShowCreateMode(false)}>Cancel</button>
+                <button className="btn btn-success" onClick={createOrder}>Create Order</button>
               </div>
             </div>
           </div>
@@ -234,16 +182,12 @@ function Orders() {
               >
                 <option value="">Select a user</option>
                 {users.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.username} ({user.role})
-                  </option>
+                  <option key={user.id} value={user.id}>{user.username} ({user.role})</option>
                 ))}
               </select>
             </div>
             <div className="col-md-6 d-flex align-items-end">
-              <button className="btn btn-primary" onClick={handleAddItem}>
-                <i className="pi pi-plus me-2"></i>Add Product
-              </button>
+              <button className="btn btn-primary" onClick={handleAddItem}><i className="pi pi-plus me-2"></i>Add Product</button>
             </div>
           </div>
 
@@ -267,44 +211,23 @@ function Orders() {
                     {newOrder.items.map((item, index) => {
                       const product = products.find(p => p.id === parseInt(item.product_id));
                       const subtotal = product ? product.price * item.quantity : 0;
-                      
                       return (
                         <tr key={index}>
                           <td>
-                            <select
-                              className="form-control"
-                              value={item.product_id}
-                              onChange={(e) => handleItemChange(index, 'product_id', e.target.value)}
-                            >
+                            <select className="form-control" value={item.product_id} onChange={(e) => handleItemChange(index, 'product_id', e.target.value)}>
                               <option value="">Select product</option>
                               {availableProducts.map(product => (
-                                <option key={product.id} value={product.id}>
-                                  {product.name} (Stock: {product.quantity})
-                                </option>
+                                <option key={product.id} value={product.id}>{product.name} (Stock: {product.quantity})</option>
                               ))}
                             </select>
                           </td>
+                          <td>{product ? `$${product.price.toFixed(2)}` : "-"}</td>
                           <td>
-                            {product ? `$${product.price.toFixed(2)}` : "-"}
+                            <input type="number" className="form-control" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} min="1" max={product ? product.quantity : 1} />
                           </td>
+                          <td>${subtotal.toFixed(2)}</td>
                           <td>
-                            <input
-                              type="number"
-                              className="form-control"
-                              value={item.quantity}
-                              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                              min="1"
-                              max={product ? product.quantity : 1}
-                            />
-                          </td>
-                          <td>
-                            ${subtotal.toFixed(2)}
-                          </td>
-                          <td>
-                            <button 
-                              className="btn btn-danger btn-sm"
-                              onClick={() => handleRemoveItem(index)}
-                            >
+                            <button className="btn btn-danger btn-sm" onClick={() => handleRemoveItem(index)}>
                               <i className="pi pi-trash"></i>
                             </button>
                           </td>
@@ -320,14 +243,11 @@ function Orders() {
       </Dialog>
 
       {/* Order Details Dialog */}
-      <Dialog 
-        header={`Order #${selectedOrder?.id} Details`} 
-        visible={showOrderDetails} 
-        style={{ width: "70vw" }} 
-        onHide={() => {
-          setShowOrderDetails(false);
-          setSelectedOrder(null);
-        }}
+      <Dialog
+        header={`Order #${selectedOrder?.id} Details`}
+        visible={showOrderDetails}
+        style={{ width: "70vw" }}
+        onHide={() => { setShowOrderDetails(false); setSelectedOrder(null); }}
       >
         {selectedOrder && (
           <div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 
 const initialUserInfo = {
@@ -9,22 +9,22 @@ const initialUserInfo = {
   is_active: false,
 };
 
-function AddUser(props) {
-  const [userInfo, setUserInfo] = useState(initialUserInfo);
+const apiUrl = import.meta.env.VITE_API_URL; // <-- Environment variable for API
 
-  useEffect(() => {}, []);
+function AddUser({ setUserAdded }) {
+  const [userInfo, setUserInfo] = useState(initialUserInfo);
 
   const addNewUser = async () => {
     try {
-      const response = await axios.post(
-        "http://localhost:8000/users",
-        userInfo
-      );
-      if (response) {
-        props.setUserAdded();
+      const response = await axios.post(`${apiUrl}/users`, userInfo);
+      if (response.status === 201 || response.status === 200) {
+        alert("User added successfully!");
+        setUserInfo(initialUserInfo); // Reset form
+        setUserAdded(); // Callback to parent
       }
     } catch (e) {
-      console.log(e);
+      console.error("Failed to add user:", e);
+      alert(e.response?.data?.detail || "Failed to add user");
     }
   };
 
@@ -46,11 +46,12 @@ function AddUser(props) {
             />
           </p>
         </div>
+
         <div className="col-sm-12 col-md-6">
           <p>
             <span>Email:</span>
             <input
-              type="text"
+              type="email"
               className="form-control"
               placeholder="Enter Email"
               value={userInfo.email}
@@ -110,7 +111,8 @@ function AddUser(props) {
           </p>
         </div>
       </div>
-      <button className="btn btn-success" onClick={() => addNewUser()}>
+
+      <button className="btn btn-success" onClick={addNewUser}>
         Add New User
       </button>
     </div>

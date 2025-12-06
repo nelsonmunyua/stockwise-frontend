@@ -22,13 +22,16 @@ function Users() {
 
   const [selectedUserId, setSelectedUserId] = useState(null);
 
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+
   useEffect(() => {
     getAllUsers();
   }, []);
 
   const getAllUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/users");
+      const response = await axios.get(`${apiUrl}/users`);
       setUsersList(response.data);
     } catch (e) {
       console.error("Failed to fetch users:", e);
@@ -72,7 +75,7 @@ function Users() {
 
 const deleteUser = async (userId) => {
   try{
-    const response = await axios.delete('http://localhost:8000/users/' + userId);
+    const response = await axios.delete(`${apiUrl}/users/${userId}`);
     if(response) {
       getAllUsers();
     }
@@ -136,7 +139,7 @@ const deleteUser = async (userId) => {
         onHide={() => setShowEditMode(false)}
       >
        <EditUser userId={selectedUserId} setUserEdited={() => {
-        setShowAddMode(false);
+        setShowEditMode(false);
         getAllUsers();
        }}/>
 

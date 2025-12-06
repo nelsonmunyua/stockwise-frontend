@@ -5,62 +5,68 @@ const initialUserInfo = {
   username: "",
   email: "",
   role: "",
-  is_active: false
+  is_active: false,
 };
 
-function ViewUser(props) {
-  const [userInfo, setUserInfo] = useState(initialUserInfo);
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+const apiUrl = import.meta.env.VITE_API_URL;
 
-  const fetchUserData = async () => {
+function ViewUser({ userId }) {
+  const [userInfo, setUserInfo] = useState(initialUserInfo);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserData(userId);
+    }
+  }, [userId]);
+
+  const fetchUserData = async (id) => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await axios.get(
-        "http://localhost:8000/users/" + props.userId
-      );
-      if (response) {
-        console.log(response.data);
+      const response = await axios.get(`${apiUrl}/users/${id}`);
+      if (response.status === 200) {
         setUserInfo(response.data);
       }
     } catch (e) {
-      console.log(e);
+      console.error("Failed to fetch user:", e);
+      setError("Failed to fetch user data");
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) return <p>Loading user data...</p>;
+  if (error) return <p className="text-danger">{error}</p>;
+
   return (
     <div className="user-view">
       <h1>Basic Info</h1>
       <div className="row">
         <div className="col-sm-12 col-md-6">
           <p>
-            <span>Username:</span>
-            <span>{userInfo.username}</span>
+            <strong>Username:</strong> {userInfo.username || "N/A"}
           </p>
         </div>
         <div className="col-sm-12 col-md-6">
           <p>
-            <span>Email:</span>
-            <span>{userInfo.email}</span>
+            <strong>Email:</strong> {userInfo.email || "N/A"}
           </p>
         </div>
-
         <div className="col-sm-12 col-md-6">
           <p>
-            <span>Role:</span>
-            <span>{userInfo.role}</span>
+            <strong>Role:</strong> {userInfo.role || "N/A"}
           </p>
         </div>
-
         <div className="col-sm-12 col-md-6">
           <p>
-            <span>Is Active:</span>{" "}
-            <span>
-              {userInfo.is_active !== undefined
-                ? userInfo.is_active
-                  ? "Yes"
-                  : "No"
-                : "N/A"}
-            </span>
+            <strong>Active:</strong>{" "}
+            {userInfo.is_active !== undefined
+              ? userInfo.is_active
+                ? "Yes"
+                : "No"
+              : "N/A"}
           </p>
         </div>
       </div>

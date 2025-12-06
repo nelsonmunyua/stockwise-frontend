@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const initialUserInfo = {
-    id:"",
+  id: "",
   username: "",
   email: "",
   password: "",
@@ -10,64 +10,63 @@ const initialUserInfo = {
   is_active: false,
 };
 
-function EditUser(props) {
+const apiUrl = import.meta.env.VITE_API_URL;
+
+function EditUser({ userId, setUserEdited }) {
   const [userInfo, setUserInfo] = useState(initialUserInfo);
 
   useEffect(() => {
-    setUserInfo({...userInfo, id: props.userId})
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
-  try {
-    const response = await axios.get(
-      "http://localhost:8000/users/" + props.userId
-    );
-
-    if (response) {
-      const u = response.data;
-
-      setUserInfo({
-        username: u.username,
-        email: u.email,
-        password: "",     // user must re-enter or leave blank
-        role: u.role,
-        is_active: u.is_active,
-      });
+    if (userId) {
+      setUserInfo(prev => ({ ...prev, id: userId }));
+      fetchUserData(userId);
     }
-  } catch (e) {
-    console.log(e);
-  }
-};
+  }, [userId]);
 
+  const fetchUserData = async (id) => {
+    try {
+      const response = await axios.get(`${apiUrl}/users/${id}`);
+      if (response.status === 200) {
+        const u = response.data;
+        setUserInfo({
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          password: "", // user must re-enter or leave blank
+          role: u.role,
+          is_active: u.is_active,
+        });
+      }
+    } catch (e) {
+      console.error("Failed to fetch user data:", e);
+      alert("Failed to fetch user data");
+    }
+  };
 
   const editExistUser = async () => {
-  try {
-    const payload = {
-      username: userInfo.username,
-      email: userInfo.email,
-      password: userInfo.password,  // must match UserCreate
-      role: userInfo.role,
-      is_active: userInfo.is_active,
-    };
+    try {
+      const payload = {
+        username: userInfo.username,
+        email: userInfo.email,
+        password: userInfo.password, // optional: only send if not empty
+        role: userInfo.role,
+        is_active: userInfo.is_active,
+      };
 
-    const response = await axios.put(
-      `http://localhost:8000/users/${props.userId}`,
-      payload
-    );
+      const response = await axios.put(`${apiUrl}/users/${userId}`, payload);
 
-    if (response) {
-      props.setUserEdited();
+      if (response.status === 200) {
+        alert("User updated successfully!");
+        setUserEdited(); // Notify parent
+      }
+    } catch (e) {
+      console.error("Failed to edit user:", e);
+      alert(e.response?.data?.detail || "Failed to edit user");
     }
-  } catch (e) {
-    console.log(e);
-  }
-};
-
+  };
 
   return (
     <div className="user-view _add-view">
-      <h1>Basic Info</h1>
+      <h1>Edit User</h1>
       <div className="row">
         <div className="col-sm-12 col-md-6">
           <p>
@@ -83,11 +82,12 @@ function EditUser(props) {
             />
           </p>
         </div>
+
         <div className="col-sm-12 col-md-6">
           <p>
             <span>Email:</span>
             <input
-              type="text"
+              type="email"
               className="form-control"
               placeholder="Enter Email"
               value={userInfo.email}
@@ -147,8 +147,9 @@ function EditUser(props) {
           </p>
         </div>
       </div>
-      <button className="btn btn-success" onClick={() => editExistUser()}>
-        Edit User
+
+      <button className="btn btn-success" onClick={editExistUser}>
+        Update User
       </button>
     </div>
   );
