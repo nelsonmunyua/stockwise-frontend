@@ -1,114 +1,127 @@
-📦 StockWise — Inventory Management System
+# 📦 StockWise — Inventory Management System
 
-StockWise is a simple full-stack inventory management system built using:
+StockWise is a simple **full-stack inventory management system** built for learning and portfolio purposes.
 
-Frontend: React
+* **Frontend:** React
+* **Backend:** FastAPI
+* **Database:** SQLite
+* **ORM:** SQLAlchemy
+* **Migrations:** Alembic
 
-Backend: FastAPI
+This MVP allows users to manage **categories, products, orders, and order items** through clean API endpoints and a simple, scalable architecture.
 
-Database: SQLite
+---
 
-ORM: SQLAlchemy
+## 🚀 Features (MVP)
 
-Migrations: Alembic
+### ✅ User Management
 
-This MVP allows users to manage categories, products, orders, and order items with clean API endpoints and a simple architecture suitable for learning and portfolio projects.
+* Register users
+* Login (JWT optional)
+* User roles: `admin`, `staff`
+* Users can place orders
 
-🚀 Features (MVP)
-✅ User Management
+### ✅ Category Management
 
-Register users
+* Create categories
+* View all categories
+* Delete categories
+* One-to-many relationship: **Category → Products**
 
-Login (JWT optional)
+### ✅ Product Management
 
-Users have roles: admin, staff
+* Add new products
+* Assign products to categories
+* Update quantity and pricing
+* Soft delete (optional)
 
-Users can place orders
+### ✅ Orders
 
-✅ Category Management
+* Users can create orders
+* Each order belongs to a single user
+* Order totals are calculated automatically
 
-Create categories
+### ✅ Order Items
 
-View all categories
+* Orders contain multiple items
+* Subtotals calculated automatically
+* Product prices fetched directly from the database
 
-Delete categories
+---
 
-Category → Products (1-to-many)
+## 🏛 Database Models
 
-✅ Product Management
+### Users
 
-Add new products
+| Field           | Type         |
+| --------------- | ------------ |
+| id              | Integer (PK) |
+| username        | Text         |
+| email           | Text         |
+| hashed_password | Text         |
+| role            | Text         |
+| is_active       | Boolean      |
+| created_at      | DateTime     |
 
-Assign product to category
+---
 
-Update quantity and pricing
+### Category
 
-Soft delete (optional)
+| Field       | Type            |
+| ----------- | --------------- |
+| id          | Integer (PK)    |
+| name        | Text            |
+| description | Text (optional) |
 
-✅ Orders
+**Relationship:**
 
-A user can create an order
+* One Category has many Products
 
-Order belongs to a single user
+---
 
-Calculates totals automatically
+### Product
 
-✅ Order Items
+| Field       | Type             |
+| ----------- | ---------------- |
+| id          | Integer (PK)     |
+| name        | Text             |
+| price       | Integer          |
+| quantity    | Integer          |
+| category_id | FK → category.id |
 
-Each order has multiple items
+**Relationships:**
 
-Subtotals auto-calculated
+* Many Products belong to one Category
+* Products relate to Orders via Order Items
 
-Product price taken from DB
+---
 
-🏛 Database Models
-Users
-Field	Type
-id	Integer (PK)
-username	Text
-email	Text
-hashed_password	Text
-role	Text
-is_active	Boolean
-created_at	DateTime
-Category
-Field	Type
-id	Integer (PK)
-name	Text
-description	Text (optional)
+### Orders
 
-Relationship:
+| Field        | Type          |
+| ------------ | ------------- |
+| id           | Integer (PK)  |
+| created_at   | DateTime      |
+| total_amount | Integer       |
+| user_id      | FK → users.id |
 
-Category has many Products
+---
 
-Product
-Field	Type
-id	Integer (PK)
-name	Text
-price	Integer
-quantity	Integer
-category_id	FK → category.id
+### Order Items
 
-Relationship:
+| Field      | Type            |
+| ---------- | --------------- |
+| id         | Integer (PK)    |
+| product_id | FK → product.id |
+| order_id   | FK → orders.id  |
+| quantity   | Integer         |
+| subtotal   | Integer         |
 
-Product → Category (many-to-one)
+---
 
-Product → OrderItems (many-to-many via order_items)
+## 📁 Project Structure
 
-Orders
-Field	Type
-id	Integer (PK)
-created_at	DateTime
-total_amount	Integer
-user_id	FK → users.id
-Order Items
-Field	Type
-id	Integer (PK)
-product_id	FK → product.id
-order_id	FK → orders.id
-quantity	Integer
-subtotal	Integer
-📁 Project Structure
+```
 backend/
 │── models.py
 │── database.py
@@ -133,88 +146,127 @@ backend/
 │   └── order_items.py
 │── alembic/
 └── requirements.txt
+```
 
-⚙️ Backend Setup Instructions
-1️⃣ Clone the repository
-git clone https://github.com/your-username/stockwise.git
+---
+
+## ⚙️ Backend Setup Instructions
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/nelsonmunyua/stockwise.git
 cd stockwise/backend
+```
 
-2️⃣ Create virtual environment
+### 2️⃣ Create a Virtual Environment
+
+```bash
 python3 -m venv venv
 source venv/bin/activate
+```
 
-3️⃣ Install dependencies
+### 3️⃣ Install Dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
-4️⃣ Run migrations (Alembic)
+### 4️⃣ Run Database Migrations
+
+```bash
 alembic upgrade head
+```
 
-5️⃣ Start the FastAPI server
+### 5️⃣ Start the FastAPI Server
+
+```bash
 uvicorn main:app --reload
-
+```
 
 Backend will run at:
 
-➡ http://127.0.0.1:8000
+```
+http://127.0.0.1:8000
+```
 
-API Docs available at:
+Interactive API Docs:
 
-➡ http://127.0.0.1:8000/docs
+```
+http://127.0.0.1:8000/docs
+```
 
-🖥 Frontend Setup (React)
+---
 
-Inside /frontend:
+## 🖥 Frontend Setup (React)
 
-1️⃣ Install dependencies
+Navigate to the `/frontend` directory:
+
+### 1️⃣ Install Dependencies
+
+```bash
 npm install
+```
 
-2️⃣ Start development server
+### 2️⃣ Start Development Server
+
+```bash
 npm start
+```
 
+Frontend runs at:
 
-App runs on:
+```
+http://localhost:3000
+```
 
-➡ http://localhost:3000
+---
 
-🧪 API Endpoints Overview
-Users
-POST /users/register
-POST /users/login
-GET  /users/
+## 🧪 API Endpoints Overview
 
-Categories
-GET /categories/
-POST /categories/
-DELETE /categories/{id}
+### Users
 
-Products
-GET /products/
-POST /products/
-GET /products/{id}
-DELETE /products/{id}
+* `POST /users/register`
+* `POST /users/login`
+* `GET /users/`
 
-Orders
-GET /orders/
-POST /orders/
-GET /orders/{id}
-DELETE /orders/{id}
+### Categories
 
-Order Items
-POST /order-items/
-GET /order-items/{order_id}
+* `GET /categories/`
+* `POST /categories/`
+* `DELETE /categories/{id}`
 
-📌 Future Improvements
+### Products
 
-JWT Authentication
+* `GET /products/`
+* `POST /products/`
+* `GET /products/{id}`
+* `DELETE /products/{id}`
 
-Role-based access control
+### Orders
 
-Low-stock alerts
+* `GET /orders/`
+* `POST /orders/`
+* `GET /orders/{id}`
+* `DELETE /orders/{id}`
 
-Inventory analytics dashboard
+### Order Items
 
-Export reports (PDF/CSV)
+* `POST /order-items/`
+* `GET /order-items/{order_id}`
 
-📜 License
+---
 
-MIT License – free to use for personal or educational projects
+## 📌 Future Improvements
+
+* JWT Authentication
+* Role-based access control
+* Low-stock alerts
+* Inventory analytics dashboard
+* Export reports (PDF / CSV)
+
+---
+
+## 📜 License
+
+MIT License — free to use for personal or educational projects.
